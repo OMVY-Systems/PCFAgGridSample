@@ -31,7 +31,6 @@ import { ColumnsToolPanelModule } from "@ag-grid-enterprise/column-tool-panel";
 import { FiltersToolPanelModule } from "@ag-grid-enterprise/filter-tool-panel";
 import { SetFilterModule } from "@ag-grid-enterprise/set-filter";
 
-
 import Moment from 'react-moment';
 import * as moment from "moment";
 
@@ -43,8 +42,6 @@ import { Panel } from '@fluentui/react/lib/Panel';
 import { useBoolean } from '@fluentui/react-hooks';
 import { DatePicker, IStackProps, IStackStyles, Label, Stack, StackItem, TextField } from "office-ui-fabric-react";
 import { appConfig } from "./constants";
-
-
 
 // Register the required feature modules with the Grid
 ModuleRegistry.registerModules([
@@ -58,11 +55,8 @@ ModuleRegistry.registerModules([
     SetFilterModule
 ]);
 
-
-
 function getAllPageRecords(columnsOnView: DataSetInterfaces.Column[],
     gridParam: DataSet) {
-
     let functionName = 'loadPagingRecords';
     let pagingDataRows: any = [];
     let currentPageRecordsID = gridParam.sortedRecordIds;
@@ -83,7 +77,6 @@ function getAllPageRecords(columnsOnView: DataSetInterfaces.Column[],
 }
 
 function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
-
     let functionName = 'mapCRMColumnsToDetailsListColmns';
     let mappedColumn = []
 
@@ -106,17 +99,11 @@ function mapCRMColumnsToDetailsListColmns(columnsOnView: any): any {
                 }
             })
         }
-
     } catch (error) {
-
         console.log(functionName + "  " + error);
-
     }
 
-
-
     return mappedColumn;
-
 }
 
 const stackTokens = { childrenGap: 50 };
@@ -125,7 +112,6 @@ const columnProps: Partial<IStackProps> = {
     tokens: { childrenGap: 15 },
     styles: { root: { width: 300 } },
 };
-
 
 export default function App(context: ComponentFramework.Context<IInputs>) {
 
@@ -142,14 +128,13 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     const [activeFillUpdateButton, setActiveFillUpdateButton] = useState(true);
 
     const [fillOperationArray, setfillOperationArray] = useState([{ guid: 0, column: '', value: '' }]);
-
     const [pasteOperationArray, setPasteOperationArray] = useState([{ guid: 0, column: '', value: '' }]);
 
     const [arr, setArr] = useState(["foo"]);
 
     const gridRef = React.useRef<AgGridReact>(null);
-    const containerStyle = useMemo(() => ({ width: "100%", height: "100%" }), []);
-    const gridStyle = useMemo(() => ({ height: "100%", width: "100%" }), []);
+    const containerStyle = useMemo(() => ({ width: "100%", height: "100%", minHeight: "400px" }), []);
+    const gridStyle = useMemo(() => ({ height: "100%", width: "100%", minHeight: "400px" }), []);
 
     const [columnDefs] = useState<ColDef[]>([
         { field: "taskid", hide: true },
@@ -165,21 +150,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             },
             cellEditor: 'select',
             cellRenderer: function (data: any) {
-
                 if (isNaN(data.value)) // cell edit case
                     return data.value;
 
                 var apstatus = optionsAPLineStatus.find(s => s.value == data.value);
-
                 console.log(data);
                 return apstatus?.label;
-                //return data.value;
             },
             onCellValueChanged: function (data: any) {
-                /**
-                 * because 'select' does not offer us the possibility to use 'key-value' as traditional,
-                 * we will use only values in 'select' and changed to 'id' when will be saved.
-                 */
                 console.log(data);
                 var apVal = data.data.aplinestatus;
                 var guid = data.data.guid;
@@ -191,16 +169,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     Xrm.Navigation.openAlertDialog("Task Name : " + data.data.taskname + "\nStart Date : " + data.data.startdate + "\nEnd Date : " + data.data.enddate
                     );
                 }
-
                 //updateSingleEntity(guid, newVal, "crfb2_aplinestatus")
             },
 
             cellEditorParams: {
-                //values: optionsAPLineStatus.map( x => x.label)
                 values: optionsAPLineStatusLabelOnly
             }
-
-
         },
         { field: "startdate", headerName: 'Start Date', filter: 'agDateColumnFilter' },
         { field: "enddate", headerName: 'End Date', filter: 'agDateColumnFilter' },
@@ -224,7 +198,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             field: "taskname",
             cellRendererParams: {
                 innerRenderer: (params: ICellRendererParams) => {
-                    // display employeeName rather than group key (employeeId)
                     return params.data.taskname;
                 },
                 suppressCount: true,
@@ -244,9 +217,12 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         // indicate if node is a group
         return dataItem.group;
     }, []);
+
+    // === FIXED: return the GUID (dataItem.guid) as the server-side group key
+    // Previously returned dataItem.taskid which didn't match the mapById keys (which use project GUID)
     const getServerSideGroupKey = useCallback((dataItem: any) => {
-        // specify which group key to use
-        return dataItem.taskid;
+        // specify which group key to use - must match the id keys used in createNodes (guid)
+        return dataItem.guid;
     }, []);
 
     const onGridReady = useCallback((params: GridReadyEvent) => {
@@ -271,7 +247,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             groupKeys: string[],
             data: any[]
         ) => {
-            // if (groupKeys.length === 0) {
+            // For server-side mode we just map the returned rows to grid row objects
             return data.map(function (d) {
                 return {
                     group: !!d.children,
@@ -284,16 +260,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     percentagecomplete: d.percentagecomplete
                 };
             });
-            //}
-            var key = groupKeys[0];
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].taskid === key) {
-                    return extractRowsFromData(
-                        groupKeys.slice(1),
-                        data[i].children.slice()
-                    );
-                }
-            }
         };
         return extractRowsFromData(request.groupKeys, data);
     }
@@ -305,75 +271,64 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             getRows: (params: IServerSideGetRowsParams) => {
                 console.log("ServerSideDatasource.getRows: params = ", params);
 
-                const { startRow, endRow, filterModel } = params.request;
-                const filterKeys = Object.keys(filterModel);
-                filterKeys.forEach(f => {
-                    console.log('${f}=${filterModel[f].filter}');
-                });
-                let apfilters: any = [];
-                if (Object.keys(params.request.filterModel).length > 0)
-                    apfilters = params.request.filterModel.aplinestatus.values;
-                //Object.keys(params.request.filterModel);
+                const { filterModel } = params.request;
 
-                let apf = ' and (';
-                for (let i = 0; i < apfilters.length; i++) {
-                    var apstatusVal = optionsAPLineStatus.find(s => s.label == apfilters[i]);
-                    if ((apfilters.length - 1) == i)
-                        apf = apf + 'crfb2_aplinestatus eq ' + apstatusVal?.value + ')';
-                    else
-                        apf = apf + 'crfb2_aplinestatus eq ' + apstatusVal?.value + ' or ';
+                // Build AP Line Status filter
+                let apfilters: any[] = [];
+                if (filterModel && filterModel.aplinestatus?.values) {
+                    apfilters = filterModel.aplinestatus.values;
                 }
 
+                let apf = "";
+                if (apfilters.length > 0) {
+                    const apParts: string[] = apfilters
+                        .map(label => {
+                            const opt = optionsAPLineStatus.find(s => s.label === label);
+                            return opt ? `crfb2_aplinestatus eq ${opt.value}` : null;
+                        })
+                        .filter(Boolean) as string[];
+                    if (apParts.length > 0) {
+                        apf = " and (" + apParts.join(" or ") + ")";
+                    }
+                }
 
-                var filter = '';//params.request.groupKeys[0];
-                if (params.request.groupKeys.length == 0) {
-                    if (apfilters.length > 0) {
-                        filter = 'NA' + "' " + apf;
-                    }
-                    else {
-                        filter = 'NA' + "'";
-                    }
+                // --- Parent filter (lookup) ---
+                let filter = "";
+                if (!params.request.groupKeys || params.request.groupKeys.length === 0) {
+                    // Root rows → parent is null
+                    filter = "null" + apf;
+                } else {
+                    // Child rows → parent = GUID (we return GUID as group key)
+                    const parentGuid = params.request.groupKeys[params.request.groupKeys.length - 1];
+                    // Put single quotes around GUID so the final string is "... eq 'GUID'"
+                    filter = `'${parentGuid}'${apf}`;
                 }
-                else {
-                    filter = params.request.groupKeys[params.request.groupKeys.length - 1];
-                    if (apfilters.length > 0) {
-                        filter = filter + "' " + apf;
-                    }
-                    else {
-                        filter = filter + "'";
-                    }
-                }
-                //console.log(apf);
-                //@ts-ignore
-                console.log(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter);
 
                 //@ts-ignore
-                fetch(Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter)
-                    .then((resp) => resp.json())
-                    .then((data: any[]) => {
-                        console.log("---------------------------");
-                        console.log(data);
-                        var allRows = getNodes(params.request, createNodes(data));
-                        //  var result = allRows;
-                        var request = params.request;
-                        var doingInfinite = request.startRow != null && request.endRow != null;
-                        var result = doingInfinite
-                            ? {
-                                rowData: allRows, //allRows.slice(request.startRow, request.endRow),
-                                rowCount: allRows.length
-                            }
+                const url = Xrm.Page.context.getClientUrl() + appConfig.GET_URL.FILTER_DATA + filter;
+                console.log("Fetching URL:", url);
+
+                fetch(url)
+                    .then(resp => resp.json())
+                    .then((data: any) => {
+                        console.log("Fetched data:", data);
+                        const allRows = getNodes(params.request, createNodes(data));
+                        const request = params.request;
+                        const doingInfinite = request.startRow != null && request.endRow != null;
+                        const result = doingInfinite
+                            ? { rowData: allRows, rowCount: allRows.length }
                             : { rowData: allRows };
                         console.log("getRows: result = ", result);
-                        setTimeout(function () {
-                            params.success(result);
-                        }, 200);
+                        params.success(result);
+                    })
+                    .catch(err => {
+                        console.error("Error fetching rows:", err);
+                        params.fail();
                     });
             }
         };
         return dataSource;
     }
-
-
 
     function onCellEditingStopped(event: any) {
         const oldVal = event.oldValue;
@@ -387,11 +342,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         updateSingleEntity(guid, newVal, colName)
     }
     function onRangeSelectionChanged(event: RangeSelectionChangedEvent) {
-        // console.log(event);
-        // var lbRangeCount = document.querySelector('#lbRangeCount')!;
-        // var lbEagerSum = document.querySelector('#lbEagerSum')!;
-        // var lbLazySum = document.querySelector('#lbLazySum')!;
-        // var cellRanges = event.api!.getCellRanges();
         if (event.finished && fillOperationArray.length >= 1) {
             setActiveFillUpdateButton(false);
         }
@@ -412,9 +362,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
     }
 
     function fillOperation(params: any) {
-        // console.log(params);
-        // console.log(params.column.getColId());
-
         if (params.currentIndex == 0) {
             fillOperationArray.length = 0;
         }
@@ -429,7 +376,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 column: 'startdate',
                 value: params.values[params.values.length - 1]
             });
-            //console.log(fillOperationArray);
             return params.values[params.values.length - 1];
         }
         if (params.column.getColId() === 'enddate') {
@@ -438,7 +384,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 column: 'enddate',
                 value: params.values[params.values.length - 1]
             });
-            //console.log(fillOperationArray);
             return params.values[params.values.length - 1];
         }
         if (params.column.getColId() === 'percentagecomplete') {
@@ -447,16 +392,13 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 column: 'percentagecomplete',
                 value: params.values[params.values.length - 1]
             });
-            // console.log(fillOperationArray);
             return params.values[params.values.length - 1];
         }
 
         return params.values[params.values.length - 1];
-
     }
 
     function processCellFromClipboard(params: any) {
-        // console.log(params);
         if (params.node.rowIndex == 0) {
             pasteOperationArray.length = 0;
         }
@@ -489,24 +431,13 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             });
             return params.value;
         }
-
-
     }
     function onPasteStart(params: PasteStartEvent) {
-        //console.log('Callback onPasteStart:', params);
     }
 
     function onPasteEnd(params: PasteEndEvent) {
-        // console.log('Callback onPasteEnd:', params);
         updateFillEntity(pasteOperationArray);
     }
-
-    // function processDataFromClipboard(params: ProcessDataFromClipboardParams): any {
-
-    //     console.log(params);
-
-
-    // }
 
     useEffect(() => {
         getAPLineLookup();
@@ -529,7 +460,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             });
     }
 
-
     function updateSingleEntity(guid: any, newVal: any, column: string) {
         var data = {
             [column]: newVal
@@ -541,7 +471,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             function success(result: any) {
                 //@ts-ignore
                 Xrm.Navigation.openAlertDialog("Record has been updated");
-                //Xrm.Utility.confirmDialog("Record has been updated");
                 gridRef.current!.api.refreshServerSideStore();
             },
             function (error: any) {
@@ -551,8 +480,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             }
         );
     }
-
-
 
     function updateFillEntity(selRows: any) {
         console.log("Update Fill -------------------");
@@ -566,7 +493,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         data.push('');
 
         for (let i = 0; i < selRows.length; i++) {
-            //first request
             data.push('--changeset_' + uniqueID);
             data.push('Content-Type:application/http');
             data.push('Content-Transfer-Encoding:binary');
@@ -576,7 +502,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             data.push('PATCH ' + Xrm.Page.context.getClientUrl() + '/api/data/v9.0/' + appConfig.SCHEMA.ENTITY_NAME_FOR_BATCH_UPDATE + '(' + selRows[i].guid + ') HTTP/1.1');
             data.push('Content-Type:application/json;type=entry');
             data.push('');
-            //data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '", "crfb2_startdate":"' + moment(startdate).format('MM/DD/YYYY') + '", "crfb2_enddate":"' + moment(enddate).format('MM/DD/YYYY') + '" }');
             if (selRows[i].column == "startdate") {
                 data.push('{ "crfb2_startdate":"' + moment(selRows[i].value).format('MM/DD/YYYY') + '" }');
             }
@@ -588,9 +513,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             }
         }
 
-
         data.push('--changeset_' + uniqueID + '--');
-        //end of batch
         data.push('--batch_' + uniqueID + '--');
         var payload = data.join('\r\n');
 
@@ -612,7 +535,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     dismissPanel();
                     //@ts-ignore
                     Xrm.Navigation.openAlertDialog("Record has been updated");
-                    //Xrm.Utility.confirmDialog("Record has been updated");
                     gridRef.current!.api.refreshServerSideStore();
                 },
                 error: function (e) {
@@ -623,7 +545,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 }
             });
     }
-
 
     function updateEntity() {
         console.log("Update -------------------");
@@ -638,7 +559,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         data.push('');
 
         for (let i = 0; i < selRows.length; i++) {
-            //first request
             data.push('--changeset_' + uniqueID);
             data.push('Content-Type:application/http');
             data.push('Content-Transfer-Encoding:binary');
@@ -651,9 +571,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             data.push('{ "crfb2_aplinestatus":"' + aplineStatus + '", "crfb2_startdate":"' + moment(startdate).format('MM/DD/YYYY') + '", "crfb2_enddate":"' + moment(enddate).format('MM/DD/YYYY') + '" }');
         }
 
-
         data.push('--changeset_' + uniqueID + '--');
-        //end of batch
         data.push('--batch_' + uniqueID + '--');
         var payload = data.join('\r\n');
 
@@ -675,7 +593,6 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     dismissPanel();
                     //@ts-ignore
                     Xrm.Navigation.openAlertDialog("Record has been updated");
-                    //Xrm.Utility.confirmDialog("Record has been updated");
                     gridRef.current!.api.refreshServerSideStore();
                 },
                 error: function (e) {
@@ -693,36 +610,17 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             updateFillEntity(fillOperationArray);
     }
 
-
-
     return (
-
         <div style={containerStyle}>
-
-
             <div className="left-div">
                 <DefaultButton secondaryText="" onClick={openPanel} text="Update Bulk Record(s)" disabled={activeUpdateButton} />
                 <DefaultButton className="btn-fill-update" secondaryText="" onClick={FillDataUpdate} text="Update Fill Record(s)" disabled={activeFillUpdateButton} />
             </div>
-            {/* <div className="right-div">
-                <Label>AP Line Status</Label>
-                <Select options={optionsAPLineStatus} className='react-select-container-filter'
-                    onChange={val => {
-                        const v: any = val?.value;
-                        // console.log(val);
-                        setAplineStatusFilter(v)
-                    }}
-                />
-            </div> */}
-
 
             <br /> <br />
-
             <br /> <br />
             <div style={gridStyle} className="ag-theme-alpine-dark">
-
                 <AgGridReact
-
                     ref={gridRef}
                     columnDefs={columnDefs}
                     defaultColDef={defaultColDef}
@@ -748,33 +646,18 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     processCellFromClipboard={processCellFromClipboard}
                     onPasteStart={onPasteStart}
                     onPasteEnd={onPasteEnd}
-                    //  processDataFromClipboard={processDataFromClipboard}
-                    //  suppressMultiRangeSelection={true}
-
-                    // isExternalFilterPresent={isExternalFilterPresent}
-                    // doesExternalFilterPass={doesExternalFilterPass}
                     fillOperation={fillOperation}
-
                 ></AgGridReact>
-
-
             </div>
 
             <Panel
                 headerText="Update records"
                 isOpen={isOpen}
                 onDismiss={dismissPanel}
-                // You MUST provide this prop! Otherwise screen readers will just say "button" with no label.
                 closeButtonAriaLabel="Close"
             >
                 <Stack horizontal tokens={stackTokens} styles={stackStyles}>
                     <Stack {...columnProps}>
-                        {/* <TextField label="AP Line Status" required
-                            onChange={(e) => {
-                                const v: any = e.target;
-                                setAplineStatus(v.value)
-                            }} /> */}
-
                         <Label>AP Line Status</Label>
                         <Select options={optionsAPLineStatus} className='react-select-container'
                             onChange={val => {
@@ -805,32 +688,49 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     </Stack>
                 </Stack>
             </Panel>
-
-
-
         </div>
     );
 }
 
-
-
-
 function createNodes(data: any) {
-    let dtemp = [];
-    let d = data.value;
-    for (let i = 0; i < d.length; i++) {
-        dtemp.push({
-            "taskname": d[i].crfb2_taskname,
-            "taskid": d[i].crfb2_taskid,
-            "guid": d[i].crfb2_projectid,
-            "aplinestatus": d[i].crfb2_aplinestatus,
-            "startdate": moment(d[i].crfb2_startdate).format("YYYY-MM-DD") != 'Invalid date' ? moment(d[i].crfb2_startdate).format("YYYY-MM-DD") : '',
-            "enddate": moment(d[i].crfb2_enddate).format("YYYY-MM-DD") != 'Invalid date' ? moment(d[i].crfb2_enddate).format("YYYY-MM-DD") : '',
-            "percentagecomplete": d[i].crfb2_percentagecomplete,
-            "children": [
-            ]
-        });
+    const rows: any[] = (data && data.value) || [];
+    const mapById: { [id: string]: any } = {};
+    const roots: any[] = [];
+
+    // normalize items into nodes
+    for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        const id = r.crfb2_projectid;
+        if (!id) continue;
+
+        mapById[id] = {
+            taskname: r.crfb2_taskname || "",
+            taskid: r.crfb2_taskid || "",
+            guid: id,
+            parent: r._crfb2_parent_value || null,
+            aplinestatus: r.crfb2_aplinestatus,
+            startdate:
+                r.crfb2_startdate && moment(r.crfb2_startdate).isValid()
+                    ? moment(r.crfb2_startdate).format("YYYY-MM-DD")
+                    : "",
+            enddate:
+                r.crfb2_enddate && moment(r.crfb2_enddate).isValid()
+                    ? moment(r.crfb2_enddate).format("YYYY-MM-DD")
+                    : "",
+            percentagecomplete: r.crfb2_percentagecomplete,
+            children: []
+        };
     }
 
-    return dtemp;
+    // attach children to parents
+    Object.keys(mapById).forEach(id => {
+        const node = mapById[id];
+        if (node.parent && mapById[node.parent]) {
+            mapById[node.parent].children.push(node);
+        } else {
+            roots.push(node);
+        }
+    });
+
+    return roots;
 }

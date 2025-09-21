@@ -1,3 +1,6 @@
+.ag-theme-alpine-dark {
+    min-height: 500px !important;
+  }
 .react-select-container {
     margin-top: 0 !important;
     padding-top: 0;
