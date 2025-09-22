@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="PCFAGGridNamespace" constructor="PCFAGGRidComponent" version="0.0.8"
+  <control namespace="PCFAGGridNamespace" constructor="PCFAGGRidComponent" version="0.1.4"
     display-name-key="PCFAGGRidComponent" description-key="PCFAGGRidComponent description"
     control-type="standard">
     <!--external-service-usage
@@ -41,7 +41,7 @@
     <resources>
       <code path="index.ts" order="1" />
       <css path="../node_modules/ag-grid-community/dist/styles/ag-grid.css" order="1" />
-      <css path="../node_modules/ag-grid-community/dist/styles/ag-theme-alpine-dark.css" order="2" />
+      <css path="../node_modules/ag-grid-community/dist/styles/ag-theme-balham.css" order="2" />
       <css path="./css/PCFAGGRidComponent.css" order="3" />
       <!-- UNCOMMENT TO ADD MORE RESOURCES
      

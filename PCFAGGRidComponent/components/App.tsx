@@ -141,7 +141,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "taskname", hide: true, checkboxSelection: true, },
         { field: "guid", hide: true },
         {
-            field: "aplinestatus", headerName: 'AP Line Status', editable: true,
+            field: "aplinestatus", headerName: 'AP Line Status', // editable: true,
             suppressFillHandle: true,
             suppressPaste: true,
             filter: 'agSetColumnFilter',
@@ -178,7 +178,8 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         },
         { field: "startdate", headerName: 'Start Date', filter: 'agDateColumnFilter' },
         { field: "enddate", headerName: 'End Date', filter: 'agDateColumnFilter' },
-        { field: "percentagecomplete", headerName: '% Complete', editable: true, filter: 'agTextColumnFilter' },
+        { field: "percentagecomplete", headerName: '% Complete',   // editable: true, 
+           filter: 'agTextColumnFilter' },
     ]);
 
     const defaultColDef = useMemo<ColDef>(() => {
@@ -187,7 +188,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             filter: true,
             floatingFilter: true,
             flex: 1,
-            editable: true,
+            // editable: true, // remove edit grid as per requirement 
             sortable: true,
             resizable: true,
         };
@@ -612,14 +613,14 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
 
     return (
         <div style={containerStyle}>
-            <div className="left-div">
+            {/* <div className="left-div">
                 <DefaultButton secondaryText="" onClick={openPanel} text="Update Bulk Record(s)" disabled={activeUpdateButton} />
                 <DefaultButton className="btn-fill-update" secondaryText="" onClick={FillDataUpdate} text="Update Fill Record(s)" disabled={activeFillUpdateButton} />
-            </div>
+            </div> */}
 
             <br /> <br />
             <br /> <br />
-            <div style={gridStyle} className="ag-theme-alpine-dark">
+            <div style={gridStyle} className="ag-theme-balham">
                 <AgGridReact
                     ref={gridRef}
                     columnDefs={columnDefs}
