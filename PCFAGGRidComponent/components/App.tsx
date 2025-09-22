@@ -180,7 +180,7 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         { field: "enddate", headerName: 'End Date', filter: 'agDateColumnFilter' },
         {
             field: "percentagecomplete", headerName: '% Complete',   // editable: true, 
-            filter: 'agTextColumnFilter'
+            filter: 'agNumberColumnFilter'
         },
     ]);
 
@@ -300,7 +300,8 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
             // For server-side mode we just map the returned rows to grid row objects
             return data.map(function (d) {
                 return {
-                    group: !!d.children,
+                    //group: !!d.children, 
+                    group: d.group, // making caret for only first level
                     taskid: d.taskid,
                     guid: d.guid,
                     taskname: d.taskname,
@@ -771,6 +772,7 @@ function createNodes(data: any) {
                     ? moment(r.crfb2_enddate).format("YYYY-MM-DD")
                     : "",
             percentagecomplete: r.crfb2_percentagecomplete,
+            group: !r._crfb2_parent_value,  // making caret for only first level
             children: []
         };
     }
