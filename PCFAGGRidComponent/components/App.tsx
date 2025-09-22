@@ -178,8 +178,10 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
         },
         { field: "startdate", headerName: 'Start Date', filter: 'agDateColumnFilter' },
         { field: "enddate", headerName: 'End Date', filter: 'agDateColumnFilter' },
-        { field: "percentagecomplete", headerName: '% Complete',   // editable: true, 
-           filter: 'agTextColumnFilter' },
+        {
+            field: "percentagecomplete", headerName: '% Complete',   // editable: true, 
+            filter: 'agTextColumnFilter'
+        },
     ]);
 
     const defaultColDef = useMemo<ColDef>(() => {
@@ -240,6 +242,53 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                 console.log(datasource);
                 params.api!.setServerSideDatasource(datasource);
             });
+    }, []);
+
+
+    // Open OOTB form on double click 
+    const onRowDoubleClicked = useCallback((event: any) => {
+        try {
+            // stop any grid editing so the editor doesn't show on double-click
+            try { event.api.stopEditing(); } catch (e) { /* ignore */ }
+
+            const guidRaw = event?.data?.guid;
+            if (!guidRaw) {
+                console.warn("Row has no guid to open form.");
+                return;
+            }
+            // normalize GUID (remove braces if present)
+            const guid = String(guidRaw).replace(/[{}]/g, "");
+
+            const entityFormOptions: any = {
+                entityName: appConfig.SCHEMA.ENTITY_NAME_FOR_UPDATE, // e.g. "crfb2_project"
+                entityId: guid,
+                // openInNewWindow: true // uncomment if you want it in a new tab/window
+            };
+
+            const formParameters: any = {}; // optional params to pass to the form
+
+            // @ts-ignore - Xrm is available in model-driven app runtime
+            Xrm.Navigation.openForm(entityFormOptions, formParameters)
+                .then((result: any) => {
+                    // Try refreshing the grid store after form opens/returns
+                    try { gridRef.current!.api.refreshServerSideStore(); } catch (e) { /* ignore */ }
+                })
+                .catch((err: any) => {
+                    console.error("openForm error", err);
+                });
+        } catch (ex) {
+            console.error("Error opening entity form:", ex);
+        }
+    }, []);
+
+    // rmove icon from second level 
+    const getRowClass = useCallback((params: any) => {
+        // second-level groups have level === 1; return a class name to target via CSS
+        try {
+            return params.node && params.node.level === 1 ? 'no-caret-level-1' : undefined;
+        } catch {
+            return undefined;
+        }
     }, []);
 
     function getNodes(request: IServerSideGetRowsRequest, data: any[]) {
@@ -648,6 +697,9 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     onPasteStart={onPasteStart}
                     onPasteEnd={onPasteEnd}
                     fillOperation={fillOperation}
+                    onRowDoubleClicked={onRowDoubleClicked}
+                    
+                   // getRowClass={getRowClass}
                 ></AgGridReact>
             </div>
 
