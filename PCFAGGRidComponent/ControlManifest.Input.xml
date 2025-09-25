@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest>
-  <control namespace="PCFAGGridNamespace" constructor="PCFAGGRidComponent" version="0.2.2"
+  <control namespace="PCFAGGridNamespace" constructor="PCFAGGRidComponent" version="0.2.3"
     display-name-key="PCFAGGRidComponent" description-key="PCFAGGRidComponent description"
     control-type="standard">
     <!--external-service-usage

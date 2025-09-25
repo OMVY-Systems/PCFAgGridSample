@@ -343,16 +343,22 @@ export default function App(context: ComponentFramework.Context<IInputs>) {
                     }
                 }
 
+                let percentf = "";
+                if (filterModel && filterModel.percentagecomplete?.filter !== undefined) {
+                    const pf = filterModel.percentagecomplete;
+                    percentf = ` and crfb2_percentagecomplete eq ${pf.filter}`;
+                }
+
                 // --- Parent filter (lookup) ---
                 let filter = "";
                 if (!params.request.groupKeys || params.request.groupKeys.length === 0) {
                     // Root rows → parent is null
-                    filter = "null" + apf;
+                    filter = "null" + apf + percentf;
                 } else {
                     // Child rows → parent = GUID (we return GUID as group key)
                     const parentGuid = params.request.groupKeys[params.request.groupKeys.length - 1];
                     // Put single quotes around GUID so the final string is "... eq 'GUID'"
-                    filter = `'${parentGuid}'${apf}`;
+                    filter = `'${parentGuid}'${apf}${percentf}`;
                 }
 
                 //@ts-ignore
